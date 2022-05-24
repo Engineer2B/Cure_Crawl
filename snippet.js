@@ -2,6 +2,7 @@
  * Te gebruiken op https://www.mijnafvalwijzer.nl/nl/${postcode}/${huisnummer}/.
  * Print in de console kalender evenementen voor 'Restafval', 'Papier en Karton' en 'Groente, Fruit en Tuinafval'.
  * Plaats de geprintte tekst in een .ics file zodat deze kan worden geïmporteerd.
+ * De evenementen vinden plaats de dag voor dat het afval wordt opgehaald.
  */
 var addressValue = ''; // Gebruikt als locatie van evenement.
 Date.prototype.yyyymmddThhmmss = function () {
@@ -61,8 +62,7 @@ collection = [{
 }];
 
 collection.forEach((colObj) => {
-	var rawData = Array.from(document.querySelectorAll(`[title='${colObj.Type}']`));
-	rawData = rawData.slice(0, 9);
+	var rawData = Array.from(document.querySelectorAll(`.textDecorationNone[title='${colObj.Type}']`));
 	var reDate = /(?<DagWoord>\w+) (?<DagNummer>\w+) (?<Maand>\w+)/g;
 	var now = new Date();
 	events = events.concat(rawData.map((v, i_V) => {
