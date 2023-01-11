@@ -1,11 +1,34 @@
+// ==UserScript==
+// @name         mijnafvalwijzer.nl download
+// @namespace    http://tampermonkey.net/
+// @version      1.2
+// @description  try to convert mijnafvalwijzer.nl data into calendar files!
+// @author       Boris Breuer
+// @match        https://www.mijnafvalwijzer.nl/nl/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=mijnafvalwijzer.nl
+// @grant        GM_setClipboard
+// @grant        GM_registerMenuCommand
+// @require https://code.jquery.com/jquery-2.1.4.min.js
+// @require https://raw.githubusercontent.com/kamranahmedse/jquery-toast-plugin/bd761d335919369ed5a27d1899e306df81de44b8/dist/jquery.toast.min.js
+// ==/UserScript==
+
 /**
  * Te gebruiken op https://www.mijnafvalwijzer.nl/nl/${postcode}/${huisnummer}/.
- * Print in de console kalender evenementen voor 'Restafval', 'Papier en Karton' en 'Groente, Fruit en Tuinafval'.
- * Plaats de geprintte tekst in een .ics file zodat deze kan worden geïmporteerd.
- * De evenementen vinden plaats de dag voor dat het afval wordt opgehaald.
+ * Kopieert kalender evenementen voor 'Restafval', 'Papier en Karton' en 'Groente, Fruit en Tuinafval' naar je clipboard.
+ * Plaats de gekopieerde tekst in een .ics file zodat deze kan worden geïmporteerd.
+ * De evenementen vinden de dag voor dat het afval wordt opgehaald plaats.
  */
-var address = '';
-Date.prototype.yyyymmddThhmmss = () => {
+var address = ''; // komt in het adres/locatie veld te staan
+// Kalender data hebben een uniek id per item waar bij importeren naar gekeken wordt.
+// Verhoog dit getal wanneer je dit script meerdere keren gebruikt of wanneer importeren niet lukt.
+var base_unique_id = 100;
+
+/* globals jQuery, $, waitForKeyElements */
+function injectStylesheet(url) {
+    $('head').append('<link rel="stylesheet" href="'+url+'" type="text/css" />');
+}
+
+Date.prototype.yyyymmddThhmmss = function() {
 	var MM = this.getMonth() + 1; // getMonth() is zero-based
 	var dd = this.getDate();
 	var hh = this.getHours();
@@ -34,7 +57,7 @@ var writeCal = (events) => {
 PRODID:Calendar
 VERSION:2.0\n`;
 	const body = events.map((ev, i_Ev) => `BEGIN:VEVENT
-UID:${i_Ev}@default
+UID:${i_Ev+base_unique_id}@default
 CLASS:PUBLIC
 DESCRIPTION:${ev.Description}
 DTSTAMP;VALUE=DATE-TIME:${date.yyyymmddThhmmss()}
@@ -73,5 +96,26 @@ collection.forEach((colObj) => {
 		};
 	}));
 });
-
-console.log(writeCal(events));
+(function() {
+	'use strict';
+	    //inject jqtoast
+    injectStylesheet("https://cdn.rawgit.com/kamranahmedse/jquery-toast-plugin/bd761d335919369ed5a27d1899e306df81de44b8/dist/jquery.toast.min.css");
+	GM_registerMenuCommand(`Copy calendar data to clipboard`, (mouseEvt) => {
+		GM_setClipboard(writeCal(events),'text');
+		var currentdate = new Date();
+		$.toast({
+			text: 'The calendar data has been copied to the clipboard.<br>Paste into file and save as .ics.',
+			heading: `${currentdate.getFullYear()}-${currentdate.getMonth()+1}-${currentdate.getDate()}`+
+			` ${currentdate.getHours()}:${currentdate.getMinutes()}:${currentdate.getSeconds()}.${currentdate.getMilliseconds()}`, // Optional heading to be shown on the toast
+			loader: true,
+			loaderBg: '#9EC600',
+			showHideTransition: 'slide', // fade, slide or plain
+			allowToastClose: true, // Boolean value true or false
+			hideAfter: 10000, // false to make it sticky or number representing the miliseconds as time after which toast needs to be hidden
+			stack: 5, // false if there should be only one toast at a time or a number representing the maximum number of toasts to be shown at a time
+			position: 'top-right',
+			bgColor: '#444444',
+			textColor: '#eeeeee'
+		});
+	});
+})();
