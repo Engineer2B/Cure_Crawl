@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         mijnafvalwijzer.nl download
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      2.0
 // @description  try to convert mijnafvalwijzer.nl data into calendar files!
 // @author       Boris Breuer
 // @match        https://www.mijnafvalwijzer.nl/nl/*
@@ -14,9 +14,9 @@
 
 /**
  * Te gebruiken op https://www.mijnafvalwijzer.nl/nl/${postcode}/${huisnummer}/.
- * Kopieert kalender evenementen voor 'Restafval', 'Papier en Karton' en 'Groente, Fruit en Tuinafval' naar je clipboard.
+ * Kopieert kalender evenementen voor 'Restafval', 'Papier en Karton' en 'Groente, Fruit en Tuinafval' naar je clipboard .
  * Plaats de gekopieerde tekst in een .ics file zodat deze kan worden geïmporteerd.
- * De evenementen vinden de dag voor dat het afval wordt opgehaald plaats.
+ * De evenementen vinden plaats de dag voordat het afval wordt opgehaald.
  */
 var address = ''; // komt in het adres/locatie veld te staan
 // Kalender data hebben een uniek id per item waar bij importeren naar gekeken wordt.
@@ -103,10 +103,11 @@ collection.forEach((colObj) => {
 	GM_registerMenuCommand(`Copy calendar data to clipboard`, (mouseEvt) => {
 		GM_setClipboard(writeCal(events),'text');
 		var currentdate = new Date();
+		let f_pad = (v) => v.toString().padStart(2,'0');
 		$.toast({
 			text: 'The calendar data has been copied to the clipboard.<br>Paste into file and save as .ics.',
-			heading: `${currentdate.getFullYear()}-${currentdate.getMonth()+1}-${currentdate.getDate()}`+
-			` ${currentdate.getHours()}:${currentdate.getMinutes()}:${currentdate.getSeconds()}.${currentdate.getMilliseconds()}`, // Optional heading to be shown on the toast
+			heading: `${f_pad(currentdate.getFullYear())}-${f_pad(currentdate.getMonth()+1)}-${f_pad(currentdate.getDate())}`+
+			` ${f_pad(currentdate.getHours())}:${f_pad(currentdate.getMinutes())}:${f_pad(currentdate.getSeconds())}.${currentdate.getMilliseconds()}`, // Optional heading to be shown on the toast
 			loader: true,
 			loaderBg: '#9EC600',
 			showHideTransition: 'slide', // fade, slide or plain
